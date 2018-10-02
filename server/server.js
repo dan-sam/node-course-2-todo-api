@@ -22,6 +22,7 @@ app.post('/todos', (req, res) => {
   });
 });
 
+
 app.get('/todos', (req, res) => {
   Todo.find().then((todos)=>{
     res.send({todos});
@@ -30,12 +31,13 @@ app.get('/todos', (req, res) => {
   });
 });
 
+
+
+
 app.get('/todos/:id', (req, res) => {
 
   var id = req.params.id;
   //res.send(req.params);
-
-
     if(!ObjectID.isValid(id)){
       return res.status(404).send();
     }
@@ -51,6 +53,9 @@ app.get('/todos/:id', (req, res) => {
     });
 
 });
+
+
+
 
 app.listen(3000, () => {
   console.log("Started on port 3000");

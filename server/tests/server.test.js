@@ -304,5 +304,26 @@ describe('POST /users/login', () => {
       }).catch((err) => done(err)); //the part .catch((err) => done(err)) gets you a useful error message
     });
   });
+});
 
+describe('DELETE /users/me/token', () => {
+  it('should remove auth token on log out', (done) => {
+    request(app)
+    //delete request to /users/me/tokens
+    .delete('/users/me/token')
+    //set x-auth equal to tokens
+    .set('x-auth', users[0].tokens[0].token)
+    //expect 200
+    .expect(200)
+    .end((err, res) => {
+      if(err){
+        return done(err);
+      }
+      //find user, verify tokens array has length of zero
+      User.findById(users[0]._id).then((user) => {
+        expect(user.tokens.length).toBe(0);
+        done();
+      }).catch((err) => done(err));
+    });
+  });
 });

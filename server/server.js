@@ -15,9 +15,10 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
   var todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
 
   todo.save().then((doc) => {
@@ -28,24 +29,15 @@ app.post('/todos', (req, res) => {
 });
 
 
-app.get('/todos', (req, res) => {
-  Todo.find().then((todos)=>{
+app.get('/todos', authenticate, (req, res) => {
+  Todo.find({_creator: req.user._id}).then((todos)=>{
     res.send({todos});
   }, (err) => {
     res.status(400).send(err);
   });
 });
 
-app.get('/todos', (req, res) => {
-  Todo.find().then((todos)=>{
-    res.send({todos});
-  }, (err) => {
-    res.status(400).send(err);
-  });
-});
-
-
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
 
   var id = req.params.id;
   //res.send(req.params);
@@ -54,7 +46,10 @@ app.get('/todos/:id', (req, res) => {
     }
 
 
-    Todo.findById(id).then((todo) => {
+    Todo.findOne({
+      _id: id,
+      _creator: req.user._id
+    }).then((todo) => {
       if(!todo){
         return res.status(404).send();
       }
@@ -67,7 +62,7 @@ app.get('/todos/:id', (req, res) => {
 
 
 
-app.delete('/todos/:id', (req, res)=>{
+app.delete('/todos/:id', authenticate, (req, res)=>{
   //get the id
   var id = req.params.id;
 
@@ -78,7 +73,10 @@ app.delete('/todos/:id', (req, res)=>{
   //remove todo by id
     //success => if no doc, send 404 | if doc found, send 200
     //error => 400 with empty body
-  Todo.findByIdAndRemove(id).then((todo) => {
+  Todo.findOneAndRemove({
+    _id: id,
+    _creator: req.user._id
+  }).then((todo) => {
     if(!todo){
       return res.status(404).send();
     }
@@ -89,7 +87,7 @@ app.delete('/todos/:id', (req, res)=>{
 });
 
 
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   //pick fields from the request body if they exist
@@ -108,11 +106,16 @@ app.patch('/todos/:id', (req, res) => {
     body.completedAt = null;
   }
 
-  //Update uses certail sets of parameters, e.g. $set, $inc, just like we did
+  //Update uses certain sets of parameters, e.g. $set, $inc, just like we did
   //in mongodb-update.js
 
-  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+  Todo.findOneAndUpdate({_id: id, _creator: req.user._id}, {$set: body}, {new: true}).then((todo) => {
     if(!todo){
+      
+      //Not found because for this user (with this token) there is no todo with this id
+      //however, this does not mean that there is no todo in general with this id, but
+      //just not for this user. That's why return a 404 -> not found
+
       return res.status(404).send();
     }
 
@@ -159,6 +162,7 @@ app.post('/users/login', (req, res) => {
       res.status(400).send();
   });
 });
+
 
 app.delete('/users/me/token', authenticate, (req, res) => {
   req.user.removeToken(req.token).then(() => {

@@ -147,6 +147,39 @@ app.get('/users/me', authenticate, (req, res) => {
 
 
 
+app.post('/users/login', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+
+  User.findByCredentials(body.email, body.password).then((user) => {
+      return user.generateAuthToken().then((token) => {
+        res.header('x-auth', token).send(user);
+      });
+  }).catch((err) => {
+      res.status(400).send();
+  });
+
+  // var hashedPassword;
+  //
+  // bcrypt.genSalt(10, (err, salt) => {
+  //   bcrypt.hash(body.password, salt, (err, hash) => {
+  //     hashedPassword = hash;
+  //   });
+  // });
+  //
+  // User.findOne({email}).then((user) => {
+  //   bcrypt.compare(user.password, hashedPassword, (err, res) => {
+  //     if(res){
+  //       return res.status(200).send(user);
+  //     }
+  //     res.status(404).send();
+  //   });
+  // }).catch((err) => {
+  //   res.status(400).send(err);
+  // });
+});
+
+
+
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
 });

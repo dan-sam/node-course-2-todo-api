@@ -140,13 +140,14 @@ app.post('/users', (req, res) => {
   });
 });
 
-
+//here you are already logged in and you have a token, so you use it in order
+//to authenticate youself
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
 
 
-
+//here you login but you dont have any token because you get it after login
 app.post('/users/login', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
 
@@ -157,27 +158,15 @@ app.post('/users/login', (req, res) => {
   }).catch((err) => {
       res.status(400).send();
   });
-
-  // var hashedPassword;
-  //
-  // bcrypt.genSalt(10, (err, salt) => {
-  //   bcrypt.hash(body.password, salt, (err, hash) => {
-  //     hashedPassword = hash;
-  //   });
-  // });
-  //
-  // User.findOne({email}).then((user) => {
-  //   bcrypt.compare(user.password, hashedPassword, (err, res) => {
-  //     if(res){
-  //       return res.status(200).send(user);
-  //     }
-  //     res.status(404).send();
-  //   });
-  // }).catch((err) => {
-  //   res.status(400).send(err);
-  // });
 });
 
+app.delete('/users/me/token', authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(() => {
+    res.status(200).send();
+  }, () => {
+    res.status(400).send();
+  });
+});
 
 
 app.listen(port, () => {

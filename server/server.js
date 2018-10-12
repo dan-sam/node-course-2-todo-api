@@ -111,7 +111,7 @@ app.patch('/todos/:id', authenticate, (req, res) => {
 
   Todo.findOneAndUpdate({_id: id, _creator: req.user._id}, {$set: body}, {new: true}).then((todo) => {
     if(!todo){
-      
+
       //Not found because for this user (with this token) there is no todo with this id
       //however, this does not mean that there is no todo in general with this id, but
       //just not for this user. That's why return a 404 -> not found
@@ -165,6 +165,14 @@ app.post('/users/login', (req, res) => {
 
 
 app.delete('/users/me/token', authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(() => {
+    res.status(200).send();
+  }, () => {
+    res.status(400).send();
+  });
+});
+
+app.post('/users/me/token', authenticate, (req, res) => {
   req.user.removeToken(req.token).then(() => {
     res.status(200).send();
   }, () => {

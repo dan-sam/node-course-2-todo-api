@@ -128,6 +128,46 @@ app.patch('/todos/:id', authenticate, (req, res) => {
 });
 
 
+app.post('/todos/:id', authenticate, (req, res) => {
+  var id = req.params.id;
+
+  //pick fields from the request body if they exist
+  var body = _.pick(req.body, ['text', 'completed']);
+
+  // validate the id => not valid? return 404
+  if(!ObjectID.isValid(id)){
+    return res.status(404).send();
+  }
+
+  if(_.isBoolean(body.completed) && body.completed){
+    body.completedAt = new Date().getTime();
+  }
+  else{
+    body.completed = false;
+    body.completedAt = null;
+  }
+
+  //Update uses certain sets of parameters, e.g. $set, $inc, just like we did
+  //in mongodb-update.js
+
+  Todo.findOneAndUpdate({_id: id, _creator: req.user._id}, {$set: body}, {new: true}).then((todo) => {
+    if(!todo){
+
+      //Not found because for this user (with this token) there is no todo with this id
+      //however, this does not mean that there is no todo in general with this id, but
+      //just not for this user. That's why return a 404 -> not found
+
+      return res.status(404).send();
+    }
+
+    res.status(200).send({todo});
+
+  }).catch((err) => {
+    res.status(400).send();
+  });
+
+});
+
 
 // POST /users
 app.post('/users', (req, res) => {

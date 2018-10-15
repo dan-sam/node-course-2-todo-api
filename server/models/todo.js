@@ -18,6 +18,11 @@ var Todo = mongoose.model('Todo', {
   _creator: {
     type: mongoose.Schema.Types.ObjectId,
     required: true
+  },
+  voltage: {
+    type: Number,
+    default: null,
+    required: false
   }
 });
 

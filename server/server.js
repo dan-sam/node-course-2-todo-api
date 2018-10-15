@@ -132,7 +132,7 @@ app.post('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   //pick fields from the request body if they exist
-  var body = _.pick(req.body, ['text', 'completed']);
+  var body = _.pick(req.body, ['text', 'completed', 'voltage']);
 
   // validate the id => not valid? return 404
   if(!ObjectID.isValid(id)){
